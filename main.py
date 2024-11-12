@@ -1,6 +1,37 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType
+from pyspark.sql.functions import udf
 from config.config import configuration
+from udf_utils import *
+
+# Function to define all user-defined functions (UDFs) for data processing.
+def define_udfs():
+    # UDFs are functions we define to apply custom transformations on data. 
+    # Here, each UDF transforms specific fields, such as extracting details from raw data, using custom logic.
+    return {
+        'extract_file_name_udf': udf(extract_file_name, StringType()),
+        'extract_position_udf': udf(extract_position, StringType()),
+         # Extracts salary range from text into start and end fields within a structured format
+        'extract_salary_udf': udf(extract_salary, StructType([
+            StructField('salary_start', DoubleType(),True),
+            StructField('salary_end', DoubleType(),True),
+        ])),
+        # Other UDFs are defined similarly for various data fields (e.g., start/end dates, requirements)
+        # This helps maintain code modularity, reusability, and easier testing.
+        'extract_start_date_udf': udf(extract_start_date, DateType()),
+        'extract_end_date_udf': udf(extract_end_date, DateType()),
+        'extract_classcode_udf': udf(extract_classcode, StringType()),
+        'extract_requirments_udf': udf(extract_requirments, StringType()),
+        'extract_notes_udf': udf(extract_notes, StringType()),
+        'extract_duties_udf': udf(extract_duties, StringType()),
+        'extract_req_udf': udf(extract_req, StringType()),
+        'extract_selection_udf': udf(extract_selection, StringType()),
+        'extract_experience_length_udf': udf(extract_experience_length, StringType()),
+        'extract_job_type_udf': udf(extract_job_type, StringType()),
+        'extract_education_length_udf': udf(extract_education_length, StringType()),
+        'extract_school_type_udf': udf(extract_school_type, StringType()),
+        'extract_application_location_udf': udf(extract_application_location, StringType()),
+    }
 
 # The following block of code ensures that the script is only executed if it is run directly (not imported as a module).
 if __name__ == "__main__":
@@ -42,7 +73,8 @@ if __name__ == "__main__":
     video_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_video'
     img_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_img'
    
-    # Define the schema for the data that will be processed. The schema defines the structure of the data.
+    # Define a schema for the input data, specifying data types and structure of each column.
+    # This schema is necessary for structured processing in Spark DataFrames.
     data_schema = StructType([
         StructField('file_name', StringType(), True),
         StructField('position', StringType(), True),
@@ -61,3 +93,26 @@ if __name__ == "__main__":
         StructField('school_type', StringType(), True),
         StructField('application_location', StringType(), True),
     ])
+
+    # Call to define_udfs() to initialize all custom UDFs for data processing tasks.
+    udfs = define_udfs()
+
+    # reading data from input directory   
+    # Define streaming DataFrame reading from the text input directory
+    job_bulletine_df = (spark.readStream
+                    .format('text')
+                    .option('wholetext', 'true')
+                    .load(text_input_dir)
+                )
+    
+    # Write the streaming DataFrame to the console for display
+    query = (job_bulletine_df
+             .writeStream
+             .outputMode("append")  # Use 'append' to show new data as it arrives
+             .format("console")       # Output the results to the console
+             .option('truncate', False)
+             .start()                # Start the streaming query
+        )
+    
+    # Wait for the termination of the stream to keep it active and allow viewing
+    query.awaitTermination()
