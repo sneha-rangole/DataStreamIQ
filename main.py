@@ -1,5 +1,5 @@
-# Importing the SparkSession class from the pyspark.sql module
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType
 from config.config import configuration
 
 # The following block of code ensures that the script is only executed if it is run directly (not imported as a module).
@@ -34,5 +34,30 @@ if __name__ == "__main__":
             .getOrCreate()  # SparkSession is initialized here
     )
 
-    # You can now use the `spark` object to interact with Spark and perform operations, 
-    # such as reading data from or writing data to S3, creating DataFrames, etc.
+    # Define paths to different input directories (for text, JSON, CSV, PDF, video, and image data)
+    text_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_text'
+    json_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_json'
+    csv_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_csv'
+    pdf_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_pdf'
+    video_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_video'
+    img_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_img'
+   
+    # Define the schema for the data that will be processed. The schema defines the structure of the data.
+    data_schema = StructType([
+        StructField('file_name', StringType(), True),
+        StructField('position', StringType(), True),
+        StructField('classcode', StringType(), True),
+        StructField('salary_start', DoubleType(), True),
+        StructField('salary_end', DoubleType(), True),
+        StructField('start_date', DateType(), True),
+        StructField('end_date', DateType(), True),
+        StructField('req', StringType(), True),
+        StructField('notes', StringType(), True),
+        StructField('duties', StringType(), True),
+        StructField('selection', StringType(), True),
+        StructField('experience_length', StringType(), True),
+        StructField('job_type', StringType(), True),
+        StructField('education_length', StringType(), True),
+        StructField('school_type', StringType(), True),
+        StructField('application_location', StringType(), True),
+    ])
