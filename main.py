@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType
-from pyspark.sql.functions import udf
+from pyspark.sql.functions import udf,regexp_replace
 from config.config import configuration
 from udf_utils import *
 
@@ -104,9 +104,36 @@ if __name__ == "__main__":
                     .option('wholetext', 'true')
                     .load(text_input_dir)
                 )
+    #Each step uses Spark DataFrame transformations and custom UDFs to parse, clean, and format the unstructured text data into a structured format,
+    # making it more suitable for analysis and reporting.
+    job_bulletins_df = job_bulletine_df.withColumn('file_name', regexp_replace(udfs['extract_file_name_udf']('value'),'\r',' ')) 
+    job_bulletins_df = job_bulletins_df.withColumn('value', regexp_replace('value', r'\n', ' '))
+    job_bulletins_df = job_bulletins_df.withColumn('position', regexp_replace(udfs['extract_position_udf']('value'), r'\r',' '))
+    job_bulletins_df = job_bulletins_df.withColumn('salary_start', udfs['extract_salary_udf']('value').getField('salary_start'))
+    job_bulletins_df = job_bulletins_df.withColumn('salary_end', udfs['extract_salary_udf']('value').getField('salary_end'))
+    job_bulletins_df = job_bulletins_df.withColumn('start_date', udfs['extract_start_date_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('end_date', udfs['extract_end_date_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('classcode', udfs['extract_classcode_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('req', udfs['extract_requirments_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('notes', udfs['extract_notes_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('duties', udfs['extract_duties_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('selection', udfs['extract_selection_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('education_length', udfs['extract_education_length_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('school_type', udfs['extract_school_type_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('experience_length', udfs['extract_experience_length_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('job_type', udfs['extract_job_type_udf']('value'))
+    job_bulletins_df = job_bulletins_df.withColumn('application_location', udfs['extract_application_location_udf']('value'))
     
+    j_df = job_bulletins_df.select(
+    'file_name', 'salary_start', 'salary_end', 'start_date', 'end_date', 
+    'req', 'classcode', 'notes', 'duties', 'selection', 'education_length', 
+    'school_type', 'experience_length', 'job_type', 'application_location'
+    )
+
+    # json_df = json_df.select('file_name','position','salary','start_date','end_date','req','notes','duties','selection','education_length','school_type','experience_length','job_type','application_location')
+
     # Write the streaming DataFrame to the console for display
-    query = (job_bulletine_df
+    query = (j_df
              .writeStream
              .outputMode("append")  # Use 'append' to show new data as it arrives
              .format("console")       # Output the results to the console
