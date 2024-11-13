@@ -48,7 +48,8 @@ if __name__ == "__main__":
     # Input directories for various types of data
     json_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_json'
     text_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_text'
-    
+    pdf_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_pdf'
+    img_input_dir = 'file:///Users/sneha_rangole/Desktop/GitCode/AWS_Big_Data_Project/input/input_img'
     # Define schema for incoming data
     data_schema = StructType([
         StructField('file_name', StringType(), True),
