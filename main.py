@@ -108,7 +108,7 @@ if __name__ == "__main__":
     job_bulletins_df = job_bulletins_df.withColumn('start_date', udfs['extract_start_date_udf']('value'))  # Extract start date
     job_bulletins_df = job_bulletins_df.withColumn('end_date', udfs['extract_end_date_udf']('value'))  # Extract end date
     job_bulletins_df = job_bulletins_df.withColumn('classcode', udfs['extract_classcode_udf']('value'))  # Extract class code
-    job_bulletins_df = job_bulletins_df.withColumn('req', udfs['extract_requirments_udf'](' value'))  # Extract requirements
+    job_bulletins_df = job_bulletins_df.withColumn('req', udfs['extract_requirments_udf']('value'))  # Extract requirements
     job_bulletins_df = job_bulletins_df.withColumn('notes', udfs['extract_notes_udf']('value'))  # Extract notes
     job_bulletins_df = job_bulletins_df.withColumn('duties', udfs['extract_duties_udf']('value'))  # Extract duties
     job_bulletins_df = job_bulletins_df.withColumn('selection', udfs['extract_selection_udf']('value'))  # Extract selection criteria
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     pdf_bulletins_df = pdf_bulletins_df.withColumn('notes', udfs['extract_notes_udf']('file_text'))  # Extract notes from PDF text
     pdf_bulletins_df = pdf_bulletins_df.withColumn('duties', udfs['extract_duties_udf']('file_text'))  # Extract duties from PDF text
     pdf_bulletins_df = pdf_bulletins_df.withColumn('selection', udfs['extract_selection_udf']('file_text'))  # Extract selection criteria from PDF text
-    pdf_bulletins_df = pdf_bulletins_df.with Column('experience_length', udfs['extract_experience_length_udf']('file_text'))  # Extract experience length from PDF text
+    pdf_bulletins_df = pdf_bulletins_df.withColumn('experience_length', udfs['extract_experience_length_udf']('file_text'))  # Extract experience length from PDF text
     pdf_bulletins_df = pdf_bulletins_df.withColumn('job_type', udfs['extract_job_type_udf']('file_text'))  # Extract job type from PDF text
     pdf_bulletins_df = pdf_bulletins_df.withColumn('education_length', udfs['extract_education_length_udf']('file_text'))  # Extract education length from PDF text
     pdf_bulletins_df = pdf_bulletins_df.withColumn('school_type', udfs['extract_school_type_udf']('file_text'))  # Extract school type from PDF text
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     union_dataframe = job_bulletins_df.union(json_df).union(pdf_bulletins_df)
 
     # Write the resulting DataFrame to the console for monitoring
-    query = (union_dataframe  # Use the combined DataFrame
+    query = (union_dataframe   # Use the combined DataFrame
              .writeStream  # Start writing the stream
              .outputMode("append")  # Append new rows to the output
              .format("console")  # Output format is console
