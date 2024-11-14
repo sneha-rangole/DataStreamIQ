@@ -1,5 +1,5 @@
 # Import necessary libraries from PySpark
-from pyspark.sql import SparkSession  # For creating a Spark session
+from pyspark.sql import SparkSession, DataFrame  # For creating a Spark session
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType, DateType, TimestampType, LongType, BinaryType  # For defining schemas
 from pyspark.sql.functions import udf, regexp_replace, lit  # For creating user-defined functions and manipulating data
 from config.config import configuration  # To get configuration settings like AWS keys
@@ -173,15 +173,31 @@ if __name__ == "__main__":
 
     # Combine (union) the DataFrames from JSON, text, and PDF sources into one DataFrame
     union_dataframe = job_bulletins_df.union(json_df).union(pdf_bulletins_df)
-
-    # Write the resulting DataFrame to the console for monitoring
-    query = (union_dataframe   # Use the combined DataFrame
-             .writeStream  # Start writing the stream
-             .outputMode("append")  # Append new rows to the output
-             .format("console")  # Output format is console
-             .option('truncate', False)  # Do not truncate long output
-             .start()  # Start the streaming query
-        )
     
+    def streamWriter(input: DataFrame, checkpointFolder, output):
+        return (input.writeStream 
+            .format('parquet')
+            .option('checkpointLocation', checkpointFolder)
+            .option('path', output)
+            .outputMode('append')
+            .trigger(processingTime="5 seconds")
+            .start()
+            )
+
+ 
+    # Write the resulting DataFrame to the console for monitoring
+    # query = (union_dataframe   # Use the combined DataFrame
+    #          .writeStream  # Start writing the stream
+    #          .outputMode("append")  # Append new rows to the output
+    #          .format("console")  # Output format is console
+    #          .option('truncate', False)  # Do not truncate long output
+    #          .start()  # Start the streaming query
+    #     )
+    
+    query = streamWriter(union_dataframe, 's3a://datastreamiqbucket/checkpoints',
+                        's3a://datastreamiqbucket/data/spark_unstructured' )
+
     # Wait for the streaming query to finish
     query.awaitTermination()  # Keep the application running until terminated
+
+    spark.stop()
